@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  username         String  @id
+  hashed_password  String   
+
+  @@map("users")
+}
+
+model WorkflowConfig {
+  id                  String              @id @default(uuid())
+  workflow_name       String              @unique
+  active              Boolean             @default(false)
+  cron_expression     String
+  // base image
+  created_at          DateTime            @default(now())
+  updated_at          DateTime            @updatedAt
+  workflow_instances  WorkflowInstance[]
+
+  @@map("workflow_configs")
+}
+
+model WorkflowInstance {
+  id                   String          @id @default(uuid())
+  state                InstanceState?
+  execution_timestamp  DateTime        @default(now())
+  created_at           DateTime        @default(now())
+  updated_at           DateTime        @updatedAt
+  workflow_id          String
+  workflow_config      WorkflowConfig  @relation(fields: [workflow_id], references: [id])
+
+  @@map("workflow_instances")
+}
+
+enum InstanceState {
+  SCHEDULED
+  QUEUED
+  RUNNING
+  SUCCESS
+  FAILED
+  ARCHIVED
+}
