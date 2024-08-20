@@ -6,9 +6,9 @@ import Constants from "./constants";
 const pullImage = async (image: string) => {
   return new Promise((resolve, reject) => {
     docker.pull(image, (err: Error | null, stream: NodeJS.ReadableStream) => {
-      if (err) reject(err);
+      if (err) return reject(err);
       docker.modem.followProgress(stream, (err: Error | null) => {
-        if (err) reject(err);
+        if (err) return reject(err);
         resolve(0);
       });
     });

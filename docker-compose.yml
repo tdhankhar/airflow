@@ -1,0 +1,52 @@
+version: "3.8"
+services:
+  airflow:
+    build: .
+    image: tdhankhar/airflow
+    container_name: airflow
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - AIRFLOW_CONTAINER_REGISTRY_USERNAME=${AIRFLOW_CONTAINER_REGISTRY_USERNAME}
+      - AIRFLOW_DATABASE_URL=${AIRFLOW_DATABASE_URL}
+      - AIRFLOW_KAFKA_URL=${AIRFLOW_KAFKA_URL}
+      - AIRFLOW_S3_URL=${AIRFLOW_S3_URL}
+      - AIRFLOW_S3_ACCESS_KEY_ID=${AIRFLOW_S3_ACCESS_KEY_ID}
+      - AIRFLOW_S3_SECRET_ACCESS_KEY=${AIRFLOW_S3_SECRET_ACCESS_KEY}
+      - AIRFLOW_JWT_SECRET_KEY=${AIRFLOW_JWT_SECRET_KEY}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - postgres
+      - kafka
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${AIRFLOW_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${AIRFLOW_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${AIRFLOW_POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  kafka:
+    image: bitnami/kafka
+    container_name: kafka
+    restart: always
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    volumes:
+      - kafka_data:/bitnami/kafka
+volumes:
+  postgres_data:
+  kafka_data:

@@ -15,8 +15,8 @@ const executeWorkflows = async () => {
 
 export default async () => {
   await eventManager.connect();
-  const topicMetaData = await eventManager.fetchTopicMetadata({ topics: [WorkflowContants.TOPICS.WORKFLOW_TRIGGERED] });
-  if (topicMetaData.topics.length === 0) {
+  const topics = await eventManager.listTopics();
+  if (!topics.includes(WorkflowContants.TOPICS.WORKFLOW_TRIGGERED)) {
     await eventManager.createTopics({
       topics: [{ topic: WorkflowContants.TOPICS.WORKFLOW_TRIGGERED }],
     });

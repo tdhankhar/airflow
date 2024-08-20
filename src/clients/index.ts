@@ -14,7 +14,9 @@ const eventProducer = kafka.producer();
 const eventConsumer = kafka.consumer({ groupId: "executor" });
 const eventManager = kafka.admin();
 
-const docker = new Docker();
+const docker = new Docker({
+  socketPath: "/var/run/docker.sock",
+});
 
 const s3Client = new S3Client({
   region: "auto",

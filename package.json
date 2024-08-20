@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsc -b && node dist/index.js"
+    "start": "tsc -b && node dist/index.js",
+    "deploy": "npx prisma migrate deploy && npm run start"
   },
   "keywords": [],
   "author": "",
