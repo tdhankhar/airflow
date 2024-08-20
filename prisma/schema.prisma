@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("AIRFLOW_DATABASE_URL")
 }
 
 model User {
@@ -19,7 +19,7 @@ model WorkflowConfig {
   workflow_name       String              @unique
   active              Boolean             @default(false)
   cron_expression     String
-  // base image
+  base_image          String
   created_at          DateTime            @default(now())
   updated_at          DateTime            @updatedAt
   workflow_instances  WorkflowInstance[]

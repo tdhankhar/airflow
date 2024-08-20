@@ -5,7 +5,10 @@ import { InstanceState } from "@prisma/client";
 
 const scheduleWorkflows = async () => {
   setInterval(async () => {
-    const instances = await WorkflowManagementService.getInstancesDueForExecution();
+    const instances = await WorkflowManagementService.getWorkflowInstances({
+      instanceState: InstanceState.SCHEDULED,
+      executionTimestamp: new Date(),
+    });
     if (instances.length === 0) {
       return;
     }

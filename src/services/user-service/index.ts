@@ -6,7 +6,7 @@ import Constants from "./constants";
 
 const authorize = async (params: { token: string }) => {
   const { token } = params;
-  const payload = jwt.verify(token, process.env.JWT_SECRET_KEY as string) as JwtPayload;
+  const payload = jwt.verify(token, process.env.AIRFLOW_JWT_SECRET_KEY as string) as JwtPayload;
   const { key } = payload;
   return { username: key };
 };
@@ -21,7 +21,7 @@ const authenticate = async (params: { username: string; password: string }) => {
   if (!isAuthenticated) {
     throw Errors.AUTH_FAILED;
   }
-  return jwt.sign({ key: user.username }, process.env.JWT_SECRET_KEY as string, { expiresIn: Constants.JWT_EXPIRY });
+  return jwt.sign({ key: user.username }, process.env.AIRFLOW_JWT_SECRET_KEY as string, { expiresIn: Constants.JWT_EXPIRY });
 };
 
 const getUser = async (params: { username: string }) => {

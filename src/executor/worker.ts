@@ -3,9 +3,9 @@ import { docker, s3 } from "../clients";
 import WorkflowManagementService from "../services/workflow-management-service";
 import Constants from "./constants";
 
-const pullImage = async (baseImage: string) => {
+const pullImage = async (image: string) => {
   return new Promise((resolve, reject) => {
-    docker.pull(baseImage, (err: Error | null, stream: NodeJS.ReadableStream) => {
+    docker.pull(image, (err: Error | null, stream: NodeJS.ReadableStream) => {
       if (err) reject(err);
       docker.modem.followProgress(stream, (err: Error | null) => {
         if (err) reject(err);
@@ -15,11 +15,11 @@ const pullImage = async (baseImage: string) => {
   });
 };
 
-const runContainer = async (baseImage: string, workflowName: string, instanceId: string) => {
+const runContainer = async (image: string, workflowName: string, instanceId: string) => {
   try {
-    await pullImage(baseImage);
+    await pullImage(image);
     const container = await docker.createContainer({
-      Image: baseImage,
+      Image: image,
       Cmd: [Constants.WORKER_CMD, workflowName],
       HostConfig: {
         NanoCpus: Constants.WORKER_HOST_CONFIG.NANO_CPUS,
@@ -51,14 +51,15 @@ export default async (payload: { instanceId: string }) => {
     instanceId,
     instanceState: InstanceState.RUNNING,
   });
-  const config = await WorkflowManagementService.getWorkflowConfig({ workflowId });
-  if (!config) {
+  const configs = await WorkflowManagementService.getWorkflowConfigs({ workflowId });
+  if (configs.length === 0) {
     await WorkflowManagementService.updateWorkflowInstanceState({ instanceId, instanceState: InstanceState.FAILED });
     await WorkflowManagementService.scheduleInstanceIfRequired({ workflowId });
     return;
   }
-  const { workflowName } = config;
-  const statusCode = await runContainer(Constants.WORKER_BASE_IMAGE, workflowName, instanceId);
+  const { workflowName, baseImage } = configs[0];
+  const image = `${process.env.AIRFLOW_CONTAINER_REGISTRY_USERNAME}/${baseImage}`;
+  const statusCode = await runContainer(image, workflowName, instanceId);
   await WorkflowManagementService.updateWorkflowInstanceState({
     instanceId,
     instanceState: statusCode === 0 ? InstanceState.SUCCESS : InstanceState.FAILED,

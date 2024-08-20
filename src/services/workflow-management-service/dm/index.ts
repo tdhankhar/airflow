@@ -7,29 +7,32 @@ const parseWorkflowConfig = (config: WorkflowConfig) => {
     workflowName: config.workflow_name,
     active: config.active,
     cronExpression: config.cron_expression,
+    baseImage: config.base_image,
     createdAt: config.created_at,
     updatedAt: config.updated_at,
   };
 };
 
 const WorkflowConfigDm = {
-  createWorkflowConfig: async (workflowName: string, cronExpression: string) => {
+  createWorkflowConfig: async (workflowName: string, cronExpression: string, baseImage: string) => {
     const config = await db.workflowConfig.create({
       data: {
         workflow_name: workflowName,
         cron_expression: cronExpression,
+        base_image: baseImage,
       },
     });
     return parseWorkflowConfig(config);
   },
-  updateWorkflowConfig: async (workflowId: string, cronExpression: string, active: boolean) => {
+  updateWorkflowConfig: async (workflowId: string, active: boolean, cronExpression: string, baseImage: string) => {
     const config = await db.workflowConfig.update({
       where: {
         id: workflowId,
       },
       data: {
-        cron_expression: cronExpression,
         active: active,
+        cron_expression: cronExpression,
+        base_image: baseImage,
       },
     });
     return parseWorkflowConfig(config);
@@ -42,6 +45,15 @@ const WorkflowConfigDm = {
     });
     if (!config) return;
     return parseWorkflowConfig(config);
+  },
+  findByQuery: async (query: { workflowId?: string }) => {
+    const { workflowId } = query;
+    const configs = await db.workflowConfig.findMany({
+      where: {
+        id: workflowId,
+      },
+    });
+    return configs.map(parseWorkflowConfig);
   },
 };
 
@@ -91,19 +103,16 @@ const WorkflowInstanceDm = {
       },
     });
   },
-  findByInstanceId: async (instanceId: string) => {
-    const instance = await db.workflowInstance.findUnique({
-      where: {
-        id: instanceId,
-      },
-    });
-    if (!instance) return;
-    return parseWorkflowInstance(instance);
-  },
-  findByQuery: async (query: { workflowId?: string; instanceState?: InstanceState; executionTimestamp?: Date }) => {
-    const { workflowId, instanceState, executionTimestamp } = query;
+  findByQuery: async (query: {
+    instanceId?: string;
+    workflowId?: string;
+    instanceState?: InstanceState;
+    executionTimestamp?: Date;
+  }) => {
+    const { instanceId, workflowId, instanceState, executionTimestamp } = query;
     const instances = await db.workflowInstance.findMany({
       where: {
+        id: instanceId,
         workflow_id: workflowId,
         state: instanceState,
         execution_timestamp: {

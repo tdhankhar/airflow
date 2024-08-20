@@ -20,23 +20,27 @@ const validateCronExpression = (cronExpression: string) => {
   }
 };
 
-const createWorkflowConfig = async (params: { workflowName: string; cronExpression: string }) => {
-  const { workflowName, cronExpression } = params;
+const createWorkflowConfig = async (params: { workflowName: string; cronExpression: string; baseImage: string }) => {
+  const { workflowName, cronExpression, baseImage } = params;
   validateCronExpression(cronExpression);
-  return WorkflowConfigDm.createWorkflowConfig(workflowName, cronExpression);
+  return WorkflowConfigDm.createWorkflowConfig(workflowName, cronExpression, baseImage);
 };
 
-const getWorkflowConfig = async (params: { workflowId: string }) => {
-  const { workflowId } = params;
-  return WorkflowConfigDm.findByWorkflowId(workflowId);
-};
-
-const updateWorkflowConfig = async (params: { workflowId: string; cronExpression: string; active: boolean }) => {
-  const { workflowId, cronExpression, active } = params;
+const updateWorkflowConfig = async (params: {
+  workflowId: string;
+  active: boolean;
+  cronExpression: string;
+  baseImage: string;
+}) => {
+  const { workflowId, active, cronExpression, baseImage } = params;
   if (cronExpression) {
     validateCronExpression(cronExpression);
   }
-  return WorkflowConfigDm.updateWorkflowConfig(workflowId, cronExpression, active);
+  return WorkflowConfigDm.updateWorkflowConfig(workflowId, active, cronExpression, baseImage);
+};
+
+const getWorkflowConfigs = async (params: { workflowId?: string }) => {
+  return WorkflowConfigDm.findByQuery(params);
 };
 
 const createWorkflowInstance = async (params: { workflowId: string }) => {
@@ -89,22 +93,24 @@ const scheduleInstanceIfRequired = async (params: { workflowId: string }) => {
   return WorkflowInstanceDm.createWorkflowInstance(workflowId, executionTimestamp);
 };
 
-const getInstancesDueForExecution = async () => {
-  return WorkflowInstanceDm.findByQuery({
-    instanceState: InstanceState.SCHEDULED,
-    executionTimestamp: new Date(),
-  });
+const getWorkflowInstances = async (params: {
+  instanceId?: string;
+  workflowId?: string;
+  instanceState?: InstanceState;
+  executionTimestamp?: Date;
+}) => {
+  return WorkflowInstanceDm.findByQuery(params);
 };
 
 export default {
   createWorkflowConfig,
-  getWorkflowConfig,
+  getWorkflowConfigs,
   updateWorkflowConfig,
   createWorkflowInstance,
   triggerWorkflowInstance,
   updateWorkflowInstanceState,
   archiveScheduledInstancesInBulk,
   scheduleInstanceIfRequired,
-  getInstancesDueForExecution,
+  getWorkflowInstances,
   updateInstanceStateInBulk,
 };

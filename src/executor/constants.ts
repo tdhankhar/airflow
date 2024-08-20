@@ -1,5 +1,4 @@
 export default {
-  WORKER_BASE_IMAGE: "tdhankhar/test-server",
   WORKER_CMD: "workflow",
   WORKER_HOST_CONFIG: {
     NANO_CPUS: 1 * 1000000000,

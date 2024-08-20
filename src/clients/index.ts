@@ -5,22 +5,23 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3
 
 const db = new PrismaClient();
 
-const event = new Kafka({
+const kafka = new Kafka({
   clientId: "airflow",
-  brokers: [process.env.KAFKA_URL as string],
+  brokers: [process.env.AIRFLOW_KAFKA_URL as string],
 });
 
-const eventProducer = event.producer();
-const eventConsumer = event.consumer({ groupId: "executor" });
+const eventProducer = kafka.producer();
+const eventConsumer = kafka.consumer({ groupId: "executor" });
+const eventManager = kafka.admin();
 
 const docker = new Docker();
 
 const s3Client = new S3Client({
   region: "auto",
-  endpoint: process.env.S3_URL as string,
+  endpoint: process.env.AIRFLOW_S3_URL as string,
   credentials: {
-    accessKeyId: process.env.S3_ACCESS_KEY_ID as string,
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY as string,
+    accessKeyId: process.env.AIRFLOW_S3_ACCESS_KEY_ID as string,
+    secretAccessKey: process.env.AIRFLOW_S3_SECRET_ACCESS_KEY as string,
   },
   forcePathStyle: true,
 });
@@ -45,4 +46,4 @@ const s3 = {
   },
 };
 
-export { db, eventProducer, eventConsumer, docker, s3 };
+export { db, eventProducer, eventConsumer, eventManager, docker, s3 };
